@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitud de Impresión y Cotización</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #C94BAD;
+      --color-primary-light: #F8E0F3;
+      --color-dark: #602453;
+      --color-bg: #602453;
+      --color-card: #FFFFFF;
+      --color-border: #E8D3E4;
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
+    body { background: var(--color-bg); color: var(--color-dark); padding: 24px 16px; min-height: 100vh; display: flex; justify-content: center; }
+    .form-wrapper { width: 100%; max-width: 680px; }
+    .brand-header { text-align: center; margin-bottom: 24px; }
+    .brand-header img { max-height: 70px; margin-bottom: 12px; }
+    .brand-header h1 { font-size: 26px; font-weight: 800; color: var(--color-card); }
+    .brand-header p { font-size: 14px; color: #E8D3E4; margin-top: 4px; }
+    .form-card { background: var(--color-card); border-radius: var(--radius); padding: 24px; box-shadow: 0 4px 20px rgba(96, 36, 83, 0.08); margin-bottom: 20px; border: 1px solid var(--color-border); }
+    .section-title { font-size: 17px; font-weight: 800; color: var(--color-primary); margin-bottom: 16px; border-bottom: 2px solid var(--color-primary-light); padding-bottom: 6px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .form-group label { font-size: 12px; font-weight: 700; color: var(--color-dark); }
+    .input-pill, .select-pill, .textarea-pill {
+      width: 100%; background: var(--color-primary-light); border: 1.5px solid transparent; border-radius: 20px;
+      padding: 10px 14px; font-size: 13px; color: var(--color-dark); outline: none; transition: 0.2s;
+    }
+    .input-pill:focus, .select-pill:focus, .textarea-pill:focus { border-color: var(--color-primary); background: #FFF; }
+    .textarea-pill { border-radius: 14px; min-height: 70px; resize: vertical; }
+    .prod-box { background: #FCF8FB; border: 1.5px dashed var(--color-primary); border-radius: var(--radius); padding: 18px; margin-bottom: 16px; position: relative; }
+    .btn-del-prod { position: absolute; top: 12px; right: 14px; background: #ff4d4f; color: #fff; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: 700; }
+    .btn-add-prod { background: var(--color-primary-light); color: var(--color-primary); border: 2px solid var(--color-primary); font-weight: 800; font-size: 13px; border-radius: 20px; padding: 10px 18px; cursor: pointer; display: block; width: 100%; margin-bottom: 20px; transition: 0.2s; }
+    .btn-add-prod:hover { background: var(--color-primary); color: #fff; }
+    .btn-submit { background: var(--color-primary); color: #fff; border: none; font-size: 16px; font-weight: 800; border-radius: 30px; padding: 14px 28px; cursor: pointer; width: 100%; box-shadow: 0 4px 15px rgba(201, 75, 173, 0.4); transition: 0.2s; }
+    .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
+    .file-input-wrapper { border: 2px dashed var(--color-border); border-radius: 14px; padding: 18px; text-align: center; background: #fff; cursor: pointer; }
+    .success-overlay { display: none; text-align: center; padding: 40px 20px; }
+  </style>
+</head>
+<body>
+  <div class="form-wrapper">
+    <div class="brand-header">
+      <img id="brand-logo-img" alt="Logo" style="display:none;">
+      <h1>Solicitud de Pedido</h1>
+      <p>Completa los detalles de tu trabajo para generar tu cotización de inmediato.</p>
+    </div>
+
+    <form id="public-order-form" onsubmit="enviarSolicitudPublica(event)">
+      <!-- 1. DATOS DEL CLIENTE -->
+      <div class="form-card">
+        <div class="section-title">1. Tus datos de contacto</div>
+        <div class="form-row">
+          <div class="form-group"><label>Nombre o Empresa *</label><input type="text" id="cli-empresa" class="input-pill" required placeholder="ej: Bordados Juanita"></div>
+          <div class="form-group"><label>Nombre de contacto</label><input type="text" id="cli-contacto" class="input-pill" placeholder="ej: Juanita Pérez"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>RUT *</label><input type="text" id="cli-rut" class="input-pill" required placeholder="12.345.678-9"></div>
+          <div class="form-group"><label>Teléfono *</label><input type="tel" id="cli-telefono" class="input-pill" required placeholder="+56 9 1234 5678"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Correo electrónico *</label><input type="email" id="cli-email" class="input-pill" required placeholder="juanita@gmail.com"></div>
+          <div class="form-group"><label>Dirección / Comuna</label><input type="text" id="cli-direccion" class="input-pill" placeholder="Calle #123, Hijuelas"></div>
+        </div>
+      </div>
+
+      <!-- 2. PRODUCTOS REQUERIDOS (DINÁMICO) -->
+      <div class="form-card">
+        <div class="section-title">2. Productos a cotizar</div>
+        <div id="dynamic-products-list"></div>
+        <button type="button" class="btn-add-prod" onclick="agregarTarjetaProductoForm()">+ Agregar otro producto al pedido</button>
+        <div class="form-group">
+          <label>¿Quieres describir tu proyecto con tus palabras? (Opcional)</label>
+          <textarea id="desc-proyecto" class="textarea-pill" placeholder="ej: Necesito renovar la imagen corporativa para inauguración de local..."></textarea>
+        </div>
+      </div>
+
+      <!-- 3. DISEÑO Y ARCHIVOS -->
+      <div class="form-card">
+        <div class="section-title">3. Diseño y Archivos</div>
+        <div class="form-group">
+          <label>¿Dispones del diseño listo para imprimir? *</label>
+          <select id="sel-tipo-diseno" class="select-pill" onchange="toggleDisenoFields(this.value)">
+            <option value="si">Sí, tengo el archivo listo para imprimir</option>
+            <option value="no">No, necesito que preparen el diseño</option>
+          </select>
+        </div>
+
+        <div id="box-necesito-diseno" style="display:none;">
+          <div class="form-group">
+            <label>Describe tu idea y detalles del diseño (textos, colores, redes, etc.):</label>
+            <textarea id="idea-diseno" class="textarea-pill" placeholder="Colores corporativos negro y fucsia, incluir logo y teléfono..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Moodboard de ideas o referencias (PDF o Imágenes):</label>
+            <input type="file" id="file-moodboard" class="input-pill" accept=".pdf,image/*" multiple>
+          </div>
+        </div>
+
+        <div id="box-tengo-diseno">
+          <div class="form-group">
+            <label>Adjuntar archivo(s) de diseño (PDF, AI, PNG, JPG):</label>
+            <input type="file" id="file-diseno" class="input-pill" accept=".pdf,.ai,.psd,image/*" multiple>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top: 14px;">
+          <div class="form-group">
+            <label>¿Para cuándo necesitas el trabajo? *</label>
+            <input type="date" id="fecha-entrega" class="input-pill" required>
+          </div>
+          <div class="form-group">
+            <label>Método de entrega:</label>
+            <select id="metodo-entrega" class="select-pill">
+              <option value="Retiro">Retiro en local</option>
+              <option value="Despacho">Despacho a domicilio</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-submit-public">Enviar Solicitud</button>
+    </form>
+
+    <div class="form-card success-overlay" id="success-box">
+      <h2 style="color:var(--color-primary); font-size:24px; font-weight:800; margin-bottom:10px;">¡Solicitud enviada con éxito!</h2>
+      <p style="font-size:14px; color:#555; line-height:1.5;">Hemos recibido tu información y tus archivos correctamente. Nos pondremos en contacto contigo a la brevedad con la cotización detallada.</p>
+    </div>
+  </div>
+
+  <script>
+    let productosPublicos = [];
+
+    // Catálogo conectado a la app (Precios: Productos, Materiales, Hojas y Terminaciones)
+    // Cada empresa tiene su propio link: /form?e=<empresa>
+    const EMPRESA_QS = (() => {
+      const e = new URLSearchParams(window.location.search).get('e');
+      return e ? `?e=${encodeURIComponent(e)}` : '';
+    })();
+
+    let catalogo = {
+      productos: ['Tarjeta de presentación', 'Pendón', 'Adhesivos / Stickers', 'Letrero', 'Cartel publicitario', 'Etiquetas'],
+      materiales: ['Couché', 'Opalina', 'Vinilo adhesivo', 'Alucomp', 'Trovicel', 'Acrílico', 'Tela PVC'],
+      terminaciones: ['Laminado mate', 'Laminado brillante', 'Barniz UV', 'Troquelado', 'Ojetillado'],
+      impresion: [
+        { valor: '4/0: una cara, color', texto: 'Solo por el frente (1 cara a color)' },
+        { valor: '4/4: ambas caras, color', texto: 'Por ambos lados (2 caras a color)' },
+        { valor: '1/0: una cara, una tinta', texto: '1 cara, blanco y negro' },
+        { valor: '1/1: ambas caras, una tinta', texto: '2 caras, blanco y negro' }
+      ]
+    };
+
+    function escaparHtml(t) {
+      return String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    function opcionesHtml(lista, seleccionado) {
+      return lista.map(op => {
+        const valor = typeof op === 'string' ? op : op.valor;
+        const texto = typeof op === 'string' ? op : op.texto;
+        return `<option value="${escaparHtml(valor)}" ${valor === seleccionado ? 'selected' : ''}>${escaparHtml(texto)}</option>`;
+      }).join('');
+    }
+
+    async function cargarCatalogo() {
+      try {
+        const res = await fetch('/api/public/catalogo' + EMPRESA_QS);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        if (Array.isArray(data.productos) && data.productos.length) catalogo.productos = data.productos;
+        if (Array.isArray(data.materiales) && data.materiales.length) catalogo.materiales = data.materiales;
+        if (Array.isArray(data.terminaciones) && data.terminaciones.length) catalogo.terminaciones = data.terminaciones;
+        if (data.tema && data.tema.primary) {
+          const raiz = document.documentElement.style;
+          raiz.setProperty('--color-primary', data.tema.primary);
+          raiz.setProperty('--color-dark', data.tema.dark || data.tema.primary);
+          raiz.setProperty('--color-primary-light', data.tema.light || '#F8E0F3');
+          const mezclar = (a, b, w) => '#' + [0, 2, 4].map(i => Math.round(parseInt(a.slice(1).substr(i, 2), 16) * (1 - w) + parseInt(b.slice(1).substr(i, 2), 16) * w).toString(16).padStart(2, '0')).join('');
+          if (/^#[0-9a-f]{6}$/i.test(data.tema.light || '') && /^#[0-9a-f]{6}$/i.test(data.tema.dark || '')) {
+            raiz.setProperty('--color-bg', mezclar(data.tema.light, '#ffffff', 0.6));
+            raiz.setProperty('--color-border', mezclar(data.tema.light, data.tema.dark, 0.1));
+          }
+        }
+        // Logo: en blanco por defecto; solo aparece si la empresa subió uno en "Empresa, logo y colores"
+        const logoEl = document.getElementById('brand-logo-img');
+        if (logoEl) {
+          if (data.logoUrl) {
+            logoEl.onload = () => { logoEl.style.display = 'inline-block'; };
+            logoEl.onerror = () => { logoEl.style.display = 'none'; };
+            logoEl.src = data.logoUrl;
+          } else {
+            logoEl.removeAttribute('src');
+            logoEl.style.display = 'none';
+          }
+        }
+        if (data.empresa) document.title = `Solicitud de cotización · ${data.empresa}`;
+      } catch (err) {
+        console.warn('No se pudo cargar el catálogo, se usan valores por defecto.', err);
+      }
+    }
+
+    function toggleDisenoFields(val) {
+      document.getElementById('box-necesito-diseno').style.display = val === 'no' ? 'block' : 'none';
+      document.getElementById('box-tengo-diseno').style.display = val === 'si' ? 'block' : 'none';
+    }
+
+    function agregarTarjetaProductoForm() {
+      const idx = Date.now();
+      productosPublicos.push({
+        id: idx,
+        producto: catalogo.productos[0] || 'Otro',
+        cantidad: 100,
+        ancho: 9,
+        alto: 5,
+        unidad_medida: 'cm',
+        caras: '4/0: una cara, color',
+        material: catalogo.materiales[0] || '',
+        terminaciones: 'Ninguno'
+      });
+      renderizarProductosPublicos();
+    }
+
+    function eliminarProductoPublico(id) {
+      if (productosPublicos.length <= 1) return alert('Debes incluir al menos un producto.');
+      productosPublicos = productosPublicos.filter(p => p.id !== id);
+      renderizarProductosPublicos();
+    }
+
+    function renderizarProductosPublicos() {
+      const cont = document.getElementById('dynamic-products-list');
+      cont.innerHTML = '';
+      productosPublicos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'prod-box';
+        div.innerHTML = `
+          ${productosPublicos.length > 1 ? `<button type="button" class="btn-del-prod" onclick="eliminarProductoPublico(${p.id})">✕</button>` : ''}
+          <div style="font-weight:800; font-size:14px; color:var(--color-primary); margin-bottom:12px;">Producto #${i + 1}</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tipo de Producto</label>
+              <select class="select-pill" onchange="productosPublicos[${i}].producto = this.value">
+                ${opcionesHtml([...catalogo.productos.filter(n => n !== 'Otro'), 'Otro'], p.producto)}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Cantidad</label>
+              <input type="number" class="input-pill" value="${p.cantidad}" min="1" onchange="productosPublicos[${i}].cantidad = parseInt(this.value) || 1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Medidas (Ancho x Alto en cm)</label>
+              <div style="display:flex; gap:8px;">
+                <input type="number" step="0.1" class="input-pill" placeholder="Ancho" value="${p.ancho}" onchange="productosPublicos[${i}].ancho = parseFloat(this.value) || 0">
+                <input type="number" step="0.1" class="input-pill" placeholder="Alto" value="${p.alto}" onchange="productosPublicos[${i}].alto = parseFloat(this.value) || 0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Impresión</label>
+              <select class="select-pill" onchange="productosPublicos[${i}].caras = this.value">
+                ${opcionesHtml(catalogo.impresion, p.caras)}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Material</label>
+              <select class="select-pill" onchange="productosPublicos[${i}].material = this.value">
+                ${opcionesHtml([...catalogo.materiales, 'No sé / Que me recomienden'], p.material)}
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Terminación preferida</label>
+              <select class="select-pill" onchange="productosPublicos[${i}].terminaciones = this.value">
+                ${opcionesHtml([{ valor: 'Ninguno', texto: 'Ninguna / Estándar' }, ...catalogo.terminaciones.filter(t => t.toLowerCase() !== 'ninguno')], p.terminaciones)}
+              </select>
+            </div>
+          </div>
+        `;
+        cont.appendChild(div);
+      });
+    }
+
+    async function enviarSolicitudPublica(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-public');
+      btn.innerText = 'Enviando...';
+      btn.disabled = true;
+
+      // Normalizar productos asegurando que materiales y terminaciones sean arrays reales
+      const prodsNormalizados = productosPublicos.map(p => ({
+        producto: p.producto || 'Producto',
+        cantidad: parseInt(p.cantidad) || 1,
+        ancho: parseFloat(p.ancho) || 0,
+        alto: parseFloat(p.alto) || 0,
+        unidad_medida: p.unidad_medida || 'cm',
+        orientacion: 'Vertical',
+        impresion: p.caras || '4/0: una cara, color',
+        materiales: p.material && !p.material.startsWith('No sé') ? [p.material] : [],
+        terminaciones: p.terminaciones ? [p.terminaciones] : ['Ninguno']
+      }));
+
+      const fd = new FormData();
+      fd.append('nombre_empresa', document.getElementById('cli-empresa').value.trim());
+      fd.append('nombre_contacto', document.getElementById('cli-contacto').value.trim());
+      fd.append('rut', document.getElementById('cli-rut').value.trim());
+      fd.append('telefono', document.getElementById('cli-telefono').value.trim());
+      fd.append('email', document.getElementById('cli-email').value.trim());
+      fd.append('direccion', document.getElementById('cli-direccion').value.trim());
+      fd.append('descripcion_proyecto', document.getElementById('desc-proyecto').value.trim());
+      fd.append('idea_diseno', document.getElementById('idea-diseno').value.trim());
+      fd.append('fecha_requerida', document.getElementById('fecha-entrega').value);
+      fd.append('metodo_entrega', document.getElementById('metodo-entrega').value);
+      fd.append('especificaciones', JSON.stringify(prodsNormalizados));
+
+      const filesDiseno = document.getElementById('file-diseno').files;
+      for (let i = 0; i < filesDiseno.length; i++) fd.append('archivos', filesDiseno[i]);
+      const filesMood = document.getElementById('file-moodboard').files;
+      for (let i = 0; i < filesMood.length; i++) fd.append('archivos', filesMood[i]);
+
+      try {
+        const res = await fetch('/api/public/solicitudes-form' + EMPRESA_QS, { method: 'POST', body: fd });
+        if (res.ok) {
+          document.getElementById('public-order-form').style.display = 'none';
+          document.getElementById('success-box').style.display = 'block';
+        } else {
+          alert('Error al enviar la solicitud.');
+          btn.innerText = 'Enviar Solicitud';
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert('Hubo un problema de conexión.');
+        btn.innerText = 'Enviar Solicitud';
+        btn.disabled = false;
+      }
+    }
+
+    // Cargar catálogo de la app e iniciar con un producto
+    cargarCatalogo().finally(() => agregarTarjetaProductoForm());
+  </script>
+</body>
+</html>
