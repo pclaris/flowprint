@@ -982,7 +982,7 @@
       </div>
     </nav>
     <button type="button" class="btn-bouncy btn-modo-toggle" id="btn-modo-toggle" onclick="alternarModoOscuro()" title="Cambiar entre modo claro y oscuro">
-      <span id="modo-icono">🌙</span><span id="modo-texto">Modo oscuro</span>
+      <span id="modo-texto">Modo oscuro</span>
     </button>
     <button class="btn-bouncy btn-salir" onclick="cerrarSesionApp()">
       <img src="assets/salir.png" alt="Salir" onerror="this.style.display='none'">
@@ -1079,7 +1079,7 @@
       <!-- Barra de búsqueda y filtro idéntica a clientes -->
       <div style="display:flex; gap:14px; align-items:center; margin-bottom: 28px;">
         <div style="position:relative; width: 320px;">
-          <span style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--color-deeper); font-size:15px;">🔍</span>
+          <span style="position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--color-deeper);"></span><img src="assets/busc.png" alt="Buscar" onerror="this.onerror=null; this.src='assets/inicio.png'"></span>
           <input type="text" id="input-buscar-forms" placeholder="Buscar por cliente, ID o producto..." oninput="filtrarFormsRecibidos()"
                  style="width:100%; background:var(--color-soft); border:none; outline:none; border-radius:25px; padding:11px 16px 11px 42px; font-size:13px; color:var(--color-darker); font-weight:600;">
         </div>
@@ -1696,9 +1696,7 @@ function cerrarAlertaCustom() {
 
     function actualizarBotonModo() {
       const oscuro = esModoOscuro();
-      const ico = document.getElementById('modo-icono');
       const txt = document.getElementById('modo-texto');
-      if (ico) ico.textContent = oscuro ? '☀️' : '🌙';
       if (txt) txt.textContent = oscuro ? 'Modo claro' : 'Modo oscuro';
     }
 
