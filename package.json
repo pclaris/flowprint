@@ -2,17 +2,13 @@
   "name": "flowprint",
   "version": "1.0.0",
   "description": "Flowprint - Control de Producción y Cotizaciones",
-  "main": "main.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "electron": "electron ."
+    "start": "node server.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
     "express": "^4.21.2",
-    "multer": "^2.4.0"
-  },
-  "devDependencies": {
-    "electron": "^44.7.1"
+    "multer": "^2.0.0"
   }
 }
